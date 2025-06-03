@@ -26,22 +26,23 @@ def city_explorer_main():
     stations = get_stations()
     loc2name = defaultdict(list)
     loc2stations = defaultdict(list)
+
+    counts = dict.fromkeys(["classic", "ebike", "public"], 0)
+    visits = dict.fromkeys(["classic", "ebike", "public"], 0)
     for s in stations:
         loc2name[truncate_loc(s.loc)].append(s.name)
         loc2stations[truncate_loc(s.loc)].append(s)
+        counts[s.type] += 1
 
     all_visited, all_unvisited = get_city_explorer_map_items()
-    public_rack_locations = [truncate_loc(x) for x in get_public_rack_locations()]
-    # filter out the public racks
-    visited = [x for x in all_visited if x not in public_rack_locations]
-    log.debug("pruned %d public racks from visited locations", len(all_visited) - len(visited))
-    unvisited = [x for x in all_unvisited if x not in public_rack_locations]
-    log.debug("pruned %d public racks from unvisited locations", len(all_unvisited) - len(unvisited))
+    public_rack_locations = {truncate_loc(x) for x in get_public_rack_locations()}
 
     key = get_google_api_key()
     gmap = gmplot.GoogleMapPlotter(lat=41.897764, lng=-87.642884, zoom=12, apikey=key)
 
-    for loc in unvisited:
+    for loc in all_unvisited:
+        if loc in public_rack_locations:
+            continue
         title = ", ".join(loc2name[loc])
         types = {x.type for x in loc2stations[loc]}
         color = label = None
@@ -52,9 +53,28 @@ def city_explorer_main():
             label = "⚡"
         gmap.marker(*loc, color=color, size=100, info_window=title, title=title, label=label)
 
-    for loc in visited:
+    for loc in all_visited:
+        types = {x.type for x in loc2stations[loc]}
+        if loc in public_rack_locations:
+            visits["public"] += 1
+            continue
+        label = "✓"
+        if types == {"classic"}:
+            visits["classic"] += 1
+        elif types == {"ebike"}:
+            label = "⚡"
+            visits["ebike"] += 1
+        else:
+            log.warning("ambiguous visit at %s", loc)
         title = ", ".join(loc2name[loc])
-        gmap.marker(*loc, color="green", size=100, info_window=title, title=title, label="✓")
+        gmap.marker(*loc, color="green", size=100, info_window=title, title=title, label=label)
+
+    n_visited = len(all_visited)
+    log.info("%d Stations Visited", n_visited)
+    log.info("That's %s of Divvy locations", f"{n_visited / len(stations):.1%}")
+    log.info("%d/%d Classic stations visited", visits["classic"], counts["classic"])
+    log.info("%d/%d Ebike stations visited", visits["ebike"], counts["ebike"])
+    log.info("%d/%d Public racks visited", visits["public"], counts["public"])
 
     # no markers for the public racks, just small gray circles
     gmap.scatter(*zip(*public_rack_locations), color="gray", size=50, marker=False)
