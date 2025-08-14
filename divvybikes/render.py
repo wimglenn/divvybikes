@@ -43,14 +43,18 @@ def city_explorer_main():
     for loc in all_unvisited:
         if loc in public_rack_locations:
             continue
-        title = ", ".join(loc2name[loc])
+        title = ", ".join(dict.fromkeys(loc2name[loc]))
         types = {x.type for x in loc2stations[loc]}
-        color = label = None
+        label = None
         if types == {"classic"}:
             color = "grey"
         elif types == {"ebike"}:
             color = "orange"
             label = "⚡"
+        else:
+            color = "white"
+            label = "2"
+            # there is both a lightweight and a classic station at the same loc!
         gmap.marker(*loc, color=color, size=100, info_window=title, title=title, label=label)
 
     for loc in all_visited:
