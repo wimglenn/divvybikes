@@ -8,6 +8,7 @@ from divvybikes.util import filesystem_cache
 
 log = logging.getLogger(__name__)
 STATION_INFO_URI = "https://gbfs.divvybikes.com/gbfs/en/station_information.json"
+GRAPHQL_URI = "https://account.divvybikes.com/bikesharefe-gql"
 
 
 @filesystem_cache(fname="/tmp/station-info.json")
@@ -34,3 +35,46 @@ def get_public_rack_locations():
     racks -= locations_by_type["ebike"]
     racks -= locations_by_type["classic"]
     return racks
+
+
+gql_query = {
+    "operationName": "GetSystemSupply",
+    "variables": {},
+    "query": """
+      query GetSystemSupply {
+      supply {
+        stations {
+          stationName
+          stationId
+          siteId
+          location {
+            lat
+            lng
+          }
+          isValet
+          isOffline
+          isLightweight
+        }
+      }
+    }
+  """,
+}
+
+
+@filesystem_cache(fname="/tmp/system-supply.json")
+def _get_inventory_raw_gql():
+    headers = {"accept-language": "en"}
+    resp = urllib3.request("POST", GRAPHQL_URI, headers=headers, json=gql_query, timeout=120)
+    if resp.status != 200:
+        log.debug(resp.data.decode(errors="replace"))
+        raise Exception(f"HTTP {resp.status} from {GRAPHQL_URI}")
+    data = resp.json()
+    log.debug("fetched %d from gql inventory", len(data["data"]["supply"]["stations"]))
+    return data
+
+
+def get_offline_stations():
+    stations = _get_inventory_raw_gql()["data"]["supply"]["stations"]
+    offline = [s for s in stations if s["isOffline"]]
+    log.debug("%d offline items from inventory", len(offline))
+    return offline

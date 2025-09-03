@@ -8,6 +8,7 @@ import gmplot
 
 from divvybikes.explorer import get_city_explorer_map_items
 from divvybikes.inventory import get_public_rack_locations
+from divvybikes.inventory import get_offline_stations
 from divvybikes.inventory import get_stations
 from divvybikes.maps import get_google_api_key
 from divvybikes.maps import truncate_loc
@@ -19,9 +20,10 @@ log = logging.getLogger(__name__)
 def city_explorer_main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--debug", help="more verbose logging", action="store_true")
+    parser.add_argument("-o", "--offline", help="check offline stations (slow)", action="store_true")
     args = parser.parse_args()
     log_level = logging.DEBUG if args.debug else logging.INFO
-    logging.basicConfig(level=log_level)
+    logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=log_level)
 
     stations = get_stations()
     loc2name = defaultdict(list)
@@ -40,6 +42,12 @@ def city_explorer_main():
     key = get_google_api_key()
     gmap = gmplot.GoogleMapPlotter(lat=41.897764, lng=-87.642884, zoom=12, apikey=key)
 
+    if args.offline:
+        offline = get_offline_stations()
+    else:
+        offline = []
+    offline_locs = {(x["location"]["lat"], x["location"]["lng"]) for x in offline}
+
     for loc in all_unvisited:
         if loc in public_rack_locations:
             continue
@@ -55,6 +63,10 @@ def city_explorer_main():
             color = "white"
             label = "2"
             # there is both a lightweight and a classic station at the same loc!
+        if args.offline and loc in offline_locs:
+            color = "red"
+            label = "⊘"
+            log.debug("%s (%s) appears to be offline", title, loc)
         gmap.marker(*loc, color=color, size=100, info_window=title, title=title, label=label)
 
     for loc in all_visited:
@@ -87,7 +99,3 @@ def city_explorer_main():
     gmap.draw(path)
     log.info(f"wrote {path}")
     webbrowser.open(f"file:///{path}")
-
-
-if __name__ == "__main__":
-    city_explorer_main()
