@@ -19,7 +19,7 @@ pip install -r requirements.txt
 
 # (optional) get a Google Maps API token and place it at ~/.google_api_key
 
-python3 -m divvybikes.render
+python3 -m divvybikes -d
 ```
 
 The result should be something like this:
