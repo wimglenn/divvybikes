@@ -30,6 +30,8 @@ def _get_city_explorer_map_items_raw(token=None):
         "Authorization": f"Bearer {token}",
     }
     resp = urllib3.request("POST", URI, headers=headers, timeout=30)
+    if resp.status == 401:
+        raise Exception("dead token")
     results = resp.json()
     log.debug("fetched %d city explorer map items", len(results["map_items"]))
     return results
