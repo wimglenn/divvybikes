@@ -93,7 +93,7 @@ def city_explorer_main():
     log.info("%d/%d Public racks visited", visits["public"], counts["public"])
 
     # no markers for the public racks, just small gray circles
-    gmap.scatter(*zip(*public_rack_locations), color="gray", size=50, marker=False)
+    gmap.scatter(*zip(*public_rack_locations), color="red", size=50, marker=False)
 
     path = Path(__file__).parent / "map.html"
     gmap.draw(path)

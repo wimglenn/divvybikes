@@ -1,6 +1,7 @@
 import logging
 
 import urllib3
+from tenacity import retry
 
 from divvybikes.models import Station
 from divvybikes.util import filesystem_cache
@@ -62,6 +63,7 @@ gql_query = {
 
 
 @filesystem_cache(fname="/tmp/system-supply.json")
+@retry
 def _get_inventory_raw_gql():
     headers = {"accept-language": "en"}
     resp = urllib3.request("POST", GRAPHQL_URI, headers=headers, json=gql_query, timeout=120)
