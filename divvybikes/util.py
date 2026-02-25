@@ -10,6 +10,10 @@ from decorator import decorator
 log = logging.getLogger(__name__)
 
 
+cache_path = Path("~/.cache/divvybikes").expanduser()
+cache_path.mkdir(parents=True, exist_ok=True)
+
+
 def _cache_hit(fname, ttl):
     if val := os.environ.get("DIVVYNOCACHE"):
         log.debug("ignoring cache because DIVVYNOCACHE=%s", val)
@@ -34,4 +38,12 @@ def filesystem_cache(func, fname="memo.json", ttl=3600, *args, **kwargs):
     serialized = json.dumps(result)
     log.debug("caching result to %s (%d bytes)", fname, len(serialized))
     Path(fname).write_text(serialized)
+    return result
+
+
+def hyperlink(url, text=None):
+    if text is None:
+        text = url
+    template = "\x1b]8;;{}\x1b\\{}\x1b]8;;\x1b\\"
+    result = template.format(url, text)
     return result

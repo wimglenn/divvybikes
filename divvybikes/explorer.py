@@ -1,9 +1,13 @@
+import json
 import logging
+import shutil
 from pathlib import Path
 
 import urllib3
 
+from divvybikes.util import cache_path
 from divvybikes.util import filesystem_cache
+from divvybikes.util import hyperlink
 
 
 log = logging.getLogger(__name__)
@@ -20,7 +24,7 @@ def _get_token():
     return AUTH_TOKEN_PATH.read_text().split()[0]
 
 
-@filesystem_cache(fname="/tmp/city-explorer-map-items.json")
+@filesystem_cache(fname=cache_path / "city-explorer-map-items.json")
 def _get_city_explorer_map_items_raw(token=None):
     if token is None:
         token = _get_token()
@@ -39,6 +43,24 @@ def _get_city_explorer_map_items_raw(token=None):
 
 def get_city_explorer_map_items(token=None, dedupe=True):
     raw_items = _get_city_explorer_map_items_raw(token)["map_items"]
+    prev = cache_path / "counts.json"
+    if not prev.is_file():
+        prev.write_text("{}")
+    loc0 = json.loads(prev.read_text())
+    loc1 = {(x["location"]["lat"], x["location"]["lng"]) for x in raw_items}
+    added = 0
+    for loc in loc1:
+        loc_str = f"{loc[0]},{loc[1]}"
+        if loc_str not in loc0:
+            loc0[loc_str] = 0
+            print("  + added", hyperlink(f"https://www.google.com/maps/search/{loc_str}"))
+            added += 1
+        loc0[loc_str] += 1
+    if added:
+        prev.write_text(json.dumps(loc0, indent=2))
+    else:
+        log.debug("no changes")
+    log.debug("%d/%d locs seen", len(loc1), len(loc0))
     visited = [x for x in raw_items if "icon" in x["single_icon_bubble"]]
     unvisited = [x for x in raw_items if "icon" not in x["single_icon_bubble"]]
     locs_visited = {(x["location"]["lat"], x["location"]["lng"]) for x in visited}

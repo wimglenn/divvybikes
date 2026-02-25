@@ -4,6 +4,7 @@ import urllib3
 from tenacity import retry
 
 from divvybikes.models import Station
+from divvybikes.util import cache_path
 from divvybikes.util import filesystem_cache
 
 
@@ -12,7 +13,7 @@ STATION_INFO_URI = "https://gbfs.divvybikes.com/gbfs/en/station_information.json
 GRAPHQL_URI = "https://account.divvybikes.com/bikesharefe-gql"
 
 
-@filesystem_cache(fname="/tmp/station-info.json")
+@filesystem_cache(fname=cache_path / "station-info.json")
 def _fetch_stations_raw():
     resp = urllib3.request("GET", STATION_INFO_URI)
     data = resp.json()
@@ -62,7 +63,7 @@ gql_query = {
 }
 
 
-@filesystem_cache(fname="/tmp/system-supply.json")
+@filesystem_cache(fname=cache_path / "system-supply.json")
 @retry
 def _get_inventory_raw_gql():
     headers = {"accept-language": "en"}

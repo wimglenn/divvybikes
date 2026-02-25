@@ -7,8 +7,8 @@ from pathlib import Path
 import gmplot
 
 from divvybikes.explorer import get_city_explorer_map_items
-from divvybikes.inventory import get_public_rack_locations
 from divvybikes.inventory import get_offline_stations
+from divvybikes.inventory import get_public_rack_locations
 from divvybikes.inventory import get_stations
 from divvybikes.maps import get_google_api_key
 from divvybikes.maps import truncate_loc
