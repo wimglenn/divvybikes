@@ -7,7 +7,6 @@ from divvybikes.models import Station
 from divvybikes.util import cache_path
 from divvybikes.util import filesystem_cache
 
-
 log = logging.getLogger(__name__)
 STATION_INFO_URI = "https://gbfs.divvybikes.com/gbfs/en/station_information.json"
 GRAPHQL_URI = "https://account.divvybikes.com/bikesharefe-gql"

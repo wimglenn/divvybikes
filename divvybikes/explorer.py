@@ -1,6 +1,5 @@
 import json
 import logging
-import shutil
 from pathlib import Path
 
 import urllib3
@@ -8,7 +7,6 @@ import urllib3
 from divvybikes.util import cache_path
 from divvybikes.util import filesystem_cache
 from divvybikes.util import hyperlink
-
 
 log = logging.getLogger(__name__)
 AUTH_TOKEN_PATH = Path("~/.lyft_token").expanduser()

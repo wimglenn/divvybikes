@@ -6,7 +6,6 @@ from pathlib import Path
 
 from decorator import decorator
 
-
 log = logging.getLogger(__name__)
 
 

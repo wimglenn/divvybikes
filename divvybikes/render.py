@@ -13,7 +13,6 @@ from divvybikes.inventory import get_stations
 from divvybikes.maps import get_google_api_key
 from divvybikes.maps import truncate_loc
 
-
 log = logging.getLogger(__name__)
 
 
