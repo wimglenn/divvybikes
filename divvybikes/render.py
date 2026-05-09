@@ -20,6 +20,7 @@ def city_explorer_main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--debug", help="more verbose logging", action="store_true")
     parser.add_argument("-o", "--offline", help="check offline stations (slow)", action="store_true")
+    parser.add_argument("-q", "--hide-visited", help="hide pins of visited stations", action="store_true")
     args = parser.parse_args()
     log_level = logging.DEBUG if args.debug else logging.INFO
     logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=log_level)
@@ -35,8 +36,8 @@ def city_explorer_main():
         loc2stations[truncate_loc(s.loc)].append(s)
         counts[s.type] += 1
 
-    all_visited, all_unvisited = get_city_explorer_map_items()
     public_rack_locations = {truncate_loc(x) for x in get_public_rack_locations()}
+    all_visited, all_unvisited = get_city_explorer_map_items(racks=public_rack_locations)
 
     key = get_google_api_key()
     gmap = gmplot.GoogleMapPlotter(lat=41.897764, lng=-87.642884, zoom=12, apikey=key)
@@ -82,7 +83,8 @@ def city_explorer_main():
         else:
             log.warning("ambiguous visit at %s", loc)
         title = ", ".join(loc2name[loc])
-        gmap.marker(*loc, color="green", size=100, info_window=title, title=title, label=label)
+        if not args.hide_visited:
+            gmap.marker(*loc, color="green", size=100, info_window=title, title=title, label=label)
 
     n_visited = len(all_visited)
     log.info("%d Stations Visited", n_visited)
@@ -93,6 +95,9 @@ def city_explorer_main():
 
     # no markers for the public racks, just small gray circles
     gmap.scatter(*zip(*public_rack_locations), color="red", size=50, marker=False)
+
+    if args.hide_visited:
+        gmap.scatter(*zip(*all_visited), color="green", size=50, marker=False)
 
     path = Path(__file__).parent / "map.html"
     gmap.draw(path)

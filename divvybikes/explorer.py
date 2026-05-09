@@ -39,7 +39,7 @@ def _get_city_explorer_map_items_raw(token=None):
     return results
 
 
-def get_city_explorer_map_items(token=None, dedupe=True):
+def get_city_explorer_map_items(token=None, dedupe=True, racks=frozenset()):
     raw_items = _get_city_explorer_map_items_raw(token)["map_items"]
     prev = cache_path / "counts.json"
     if not prev.is_file():
@@ -51,7 +51,8 @@ def get_city_explorer_map_items(token=None, dedupe=True):
         loc_str = f"{loc[0]},{loc[1]}"
         if loc_str not in loc0:
             loc0[loc_str] = 0
-            print("  + added", hyperlink(f"https://www.google.com/maps/search/{loc_str}"))
+            s = "rack" if loc in racks else "station"
+            print(f"  + added {s}", hyperlink(f"https://www.google.com/maps/search/{loc_str}"))
             added += 1
         loc0[loc_str] += 1
     if added:
