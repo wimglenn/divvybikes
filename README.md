@@ -1,9 +1,8 @@
 # Divvy Bikes
 
-City Explorer is cool, but figuring out what are really Divvy bike stations and what are just public racks is not fun.
-See https://community.bikeangels.com/discussions/bike-angels-general/please-remove-public-racks-from-the-city-explorer/3333 
+The "City Explorer" feature in the Divvy app is cool, but figuring out which locations are real Divvy bike stations and what are just city public racks is not fun.
 
-This repository contains some tooling for rendering your City Explorer using the Google Maps API and removing those public racks.
+This repository contains some tooling for rendering your City Explorer using the Google Maps API and hiding those public racks.
 
 Quickstart:
 
