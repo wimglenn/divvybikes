@@ -10,7 +10,7 @@ class Station:
     def type(self):
         if self._raw is None:
             return "unknown"
-        if "Public Rack" in self.name:
+        if "Public Rack" in self.name or self.name.endswith("Corral"):
             return "public"
         if self._raw.get("station_type") == "classic" or self._raw.get("isLightweight") == False:
             return "classic"
