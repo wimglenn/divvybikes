@@ -65,14 +65,17 @@ gql_query = {
 @filesystem_cache(fname=cache_path / "system-supply.json")
 @retry
 def _get_inventory_raw_gql():
-    headers = {"accept-language": "en"}
-    resp = urllib3.request("POST", GRAPHQL_URI, headers=headers, json=gql_query, timeout=120)
-    if resp.status != 200:
-        log.debug(resp.data.decode(errors="replace"))
-        raise Exception(f"HTTP {resp.status} from {GRAPHQL_URI}")
-    data = resp.json()
-    log.debug("fetched %d from gql inventory", len(data["data"]["supply"]["stations"]))
-    return data
+    while True:
+        headers = {"accept-language": "en"}
+        resp = urllib3.request("POST", GRAPHQL_URI, headers=headers, json=gql_query, timeout=120)
+        if resp.status != 200:
+            log.debug(resp.data.decode(errors="replace"))
+            raise Exception(f"HTTP {resp.status} from {GRAPHQL_URI}")
+        data = resp.json()
+        n = len(data["data"]["supply"]["stations"])
+        log.debug("fetched %d from gql inventory", n)
+        if n:
+            return data
 
 
 def get_offline_stations():
