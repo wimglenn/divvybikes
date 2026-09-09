@@ -94,7 +94,7 @@ def city_explorer_main():
     log.info("%d/%d Public racks visited", visits["public"], counts["public"])
 
     # no markers for the public racks, just small gray circles
-    gmap.scatter(*zip(*public_rack_locations), color="red", size=50, marker=False)
+    gmap.scatter(*zip(*public_rack_locations), color="red", size=25, marker=False)
 
     if args.hide_visited:
         gmap.scatter(*zip(*all_visited), color="green", size=50, marker=False)
