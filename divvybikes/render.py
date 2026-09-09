@@ -99,7 +99,7 @@ def city_explorer_main():
     if args.hide_visited:
         gmap.scatter(*zip(*all_visited), color="green", size=50, marker=False)
 
-    path = Path(__file__).parent / "map.html"
+    path = Path(__file__).parent.parent / "map.html"
     gmap.draw(path)
     log.info(f"wrote {path}")
     webbrowser.open(f"file:///{path}")
