@@ -82,8 +82,8 @@ def city_explorer_main():
             visits["ebike"] += 1
         else:
             log.warning("ambiguous visit at %s", loc)
-        title = ", ".join(loc2name[loc])
         if not args.hide_visited:
+            title = ", ".join(loc2name[loc])
             gmap.marker(*loc, color="green", size=100, info_window=title, title=title, label=label)
 
     n_visited = len(all_visited)
@@ -93,13 +93,17 @@ def city_explorer_main():
     log.info("%d/%d Ebike stations visited", visits["ebike"], counts["ebike"])
     log.info("%d/%d Public racks visited", visits["public"], counts["public"])
 
+    visited_racks = [x for x in public_rack_locations if x in all_visited]
+    unvisited_racks = [x for x in public_rack_locations if x not in all_visited]
+
     # no markers for the public racks, just small gray circles
-    gmap.scatter(*zip(*public_rack_locations), color="red", size=25, marker=False)
+    gmap.scatter(*zip(*visited_racks), color="green", size=25, marker=False)
+    gmap.scatter(*zip(*unvisited_racks), color="red", size=25, marker=False)
 
     if args.hide_visited:
         gmap.scatter(*zip(*all_visited), color="green", size=50, marker=False)
 
     path = Path(__file__).parent.parent / "map.html"
-    gmap.draw(path)
+    gmap.draw(str(path))
     log.info(f"wrote {path}")
     webbrowser.open(f"file:///{path}")
