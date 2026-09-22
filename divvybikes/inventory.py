@@ -26,15 +26,17 @@ def get_stations():
     return result
 
 
-def get_public_rack_locations():
+def get_rack_locations():
     stations = get_stations()
-    locations_by_type = {k: set() for k in ("public", "classic", "ebike")}
+    locations_by_type = {
+        "Station": set(),
+        "Rack": set(),
+    }
     for station in stations:
         locations_by_type[station.type].add(station.loc)
-    racks = locations_by_type["public"]
-    # if a Public Rack is coincident with a real station, don't want to filter that location out
-    racks -= locations_by_type["ebike"]
-    racks -= locations_by_type["classic"]
+    racks = locations_by_type["Rack"]
+    # if a rack is coincident with a station, don't want to filter that location out
+    racks -= locations_by_type["Station"]
     return racks
 
 

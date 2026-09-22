@@ -8,7 +8,7 @@ import gmplot
 
 from divvybikes.explorer import get_city_explorer_map_items
 from divvybikes.inventory import get_offline_stations
-from divvybikes.inventory import get_public_rack_locations
+from divvybikes.inventory import get_rack_locations
 from divvybikes.inventory import get_stations
 from divvybikes.maps import get_google_api_key
 from divvybikes.maps import truncate_loc
@@ -29,15 +29,15 @@ def city_explorer_main():
     loc2name = defaultdict(list)
     loc2stations = defaultdict(list)
 
-    counts = dict.fromkeys(["classic", "ebike", "public"], 0)
-    visits = dict.fromkeys(["classic", "ebike", "public"], 0)
+    counts = dict.fromkeys(["Station", "Rack"], 0)
+    visits = dict.fromkeys(["Station", "Rack"], 0)
     for s in stations:
         loc2name[truncate_loc(s.loc)].append(s.name)
         loc2stations[truncate_loc(s.loc)].append(s)
         counts[s.type] += 1
 
-    public_rack_locations = {truncate_loc(x) for x in get_public_rack_locations()}
-    all_visited, all_unvisited = get_city_explorer_map_items(racks=public_rack_locations)
+    rack_locations = {truncate_loc(x) for x in get_rack_locations()}
+    all_visited, all_unvisited = get_city_explorer_map_items(racks=rack_locations)
 
     key = get_google_api_key()
     gmap = gmplot.GoogleMapPlotter(lat=41.897764, lng=-87.642884, zoom=12, apikey=key)
@@ -49,20 +49,17 @@ def city_explorer_main():
     offline_locs = {(x["location"]["lat"], x["location"]["lng"]) for x in offline}
 
     for loc in all_unvisited:
-        if loc in public_rack_locations:
+        if loc in rack_locations:
             continue
         title = ", ".join(dict.fromkeys(loc2name[loc]))
         types = {x.type for x in loc2stations[loc]}
         label = None
-        if types == {"classic"}:
+        if types == {"Station"}:
             color = "grey"
-        elif types == {"ebike"}:
-            color = "orange"
-            label = "⚡"
         else:
             color = "white"
             label = "2"
-            # there is both a lightweight and a classic station at the same loc!
+            # there is both a rack and a classic station at the same loc!
         if args.offline and loc in offline_locs:
             color = "red"
             label = "⊘"
@@ -71,15 +68,12 @@ def city_explorer_main():
 
     for loc in all_visited:
         types = {x.type for x in loc2stations[loc]}
-        if loc in public_rack_locations:
-            visits["public"] += 1
+        if loc in rack_locations:
+            visits["Rack"] += 1
             continue
         label = "✓"
-        if types == {"classic"}:
-            visits["classic"] += 1
-        elif types == {"ebike"}:
-            label = "⚡"
-            visits["ebike"] += 1
+        if types == {"Station"}:
+            visits["Station"] += 1
         else:
             log.warning("ambiguous visit at %s", loc)
         if not args.hide_visited:
@@ -87,16 +81,14 @@ def city_explorer_main():
             gmap.marker(*loc, color="green", size=100, info_window=title, title=title, label=label)
 
     n_visited = len(all_visited)
-    log.info("%d Stations Visited", n_visited)
-    log.info("That's %s of Divvy locations", f"{n_visited / len(stations):.1%}")
-    log.info("%d/%d Classic stations visited", visits["classic"], counts["classic"])
-    log.info("%d/%d Ebike stations visited", visits["ebike"], counts["ebike"])
-    log.info("%d/%d Public racks visited", visits["public"], counts["public"])
+    log.info("%d visits", n_visited)
+    log.info("%d/%d stations visited", visits["Station"], counts["Station"])
+    log.info("%d/%d racks visited", visits["Rack"], counts["Rack"])
 
-    visited_racks = [x for x in public_rack_locations if x in all_visited]
-    unvisited_racks = [x for x in public_rack_locations if x not in all_visited]
+    visited_racks = [x for x in rack_locations if x in all_visited]
+    unvisited_racks = [x for x in rack_locations if x not in all_visited]
 
-    # no markers for the public racks, just small gray circles
+    # no markers for the racks, just small gray circles
     gmap.scatter(*zip(*visited_racks), color="green", size=25, marker=False)
     gmap.scatter(*zip(*unvisited_racks), color="red", size=25, marker=False)
 

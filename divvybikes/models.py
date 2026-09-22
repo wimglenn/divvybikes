@@ -1,25 +1,34 @@
+from .util import hyperlink
+
+
 class Station:
     def __init__(self, pk, name, lat, lng):
         self.pk = pk
         self.name = name
         self.lat = lat
         self.lng = lng
-        self._raw = None
+        self._raw = {}
 
     @property
     def type(self):
-        if self._raw is None:
-            return "unknown"
+        if self._raw.get("station_type") == "classic":
+            return "Station"
         if "Public Rack" in self.name or self.name.endswith("Corral"):
-            return "public"
-        if self._raw.get("station_type") == "classic" or self._raw.get("isLightweight") == False:
-            return "classic"
-        if self._raw.get("isLightweight") or self._raw.get("station_type") == "lightweight":
-            return "ebike"
+            return "Rack"
+        if self._raw.get("station_type") == "lightweight":
+            # even though Lyft removed all "ebike-only" stations, there are
+            # evidently still a couple of these left in db...
+            return "Station"
+        return "unknown"
 
     @property
     def loc(self):
         return self.lat, self.lng
+
+    @property
+    def link(self):
+        url = f"https://www.google.com/maps/search/{self.lat},{self.lng}"
+        return hyperlink(url)
 
     @classmethod
     def fromraw(cls, data):
@@ -40,7 +49,4 @@ class Station:
         return obj
 
     def __repr__(self):
-        pre = self.type.capitalize() + " "
-        if pre == "Classic ":
-            pre = ""
-        return f"<{pre}Station at ({self.lat}, {self.lng}): {self.name}>"
+        return f"<{self.type} at ({self.lat}, {self.lng}): {self.name}>"
